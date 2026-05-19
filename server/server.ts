@@ -10,8 +10,8 @@ import entriesRoutes from './routes/entries.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // .env is at project root (/time-log/.env)
-// dev runs from server/ -> ../.env, prod runs from server/dist/ -> ../../.env
-const projectRoot = path.resolve(__dirname, __dirname.endsWith('/dist') ? '../..' : '..');
+// script always runs with cwd = server/ (both dev and prod), so .env is at ../.env
+const projectRoot = path.resolve(process.cwd(), '..');
 dotenv.config({ path: path.join(projectRoot, '.env'), override: true });
 
 // Verify env loaded regardless of source (dotenv or shell export)

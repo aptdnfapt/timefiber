@@ -1,7 +1,9 @@
 import jwt from 'jsonwebtoken';
 import type { Request, Response, NextFunction } from 'express';
 
-const JWT_SECRET = process.env.JWT_SECRET!;
+function getJwtSecret(): string {
+  return process.env.JWT_SECRET!;
+}
 
 export interface AuthRequest extends Request {
   user?: { authenticated: boolean };
@@ -15,7 +17,7 @@ export function verifyToken(req: AuthRequest, res: Response, next: NextFunction)
   }
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as { authenticated: boolean };
+    const decoded = jwt.verify(token, getJwtSecret()) as { authenticated: boolean };
     req.user = decoded;
     next();
   } catch (err) {
@@ -24,5 +26,5 @@ export function verifyToken(req: AuthRequest, res: Response, next: NextFunction)
 }
 
 export function generateToken(): string {
-  return jwt.sign({ authenticated: true }, JWT_SECRET, { expiresIn: '7d' });
+  return jwt.sign({ authenticated: true }, getJwtSecret(), { expiresIn: '7d' });
 }

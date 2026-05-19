@@ -10,7 +10,7 @@ import entriesRoutes from './routes/entries.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Load .env from project root (one level above server/)
-dotenv.config({ path: path.join(__dirname, '..', '..', '.env'), override: true });
+dotenv.config({ path: path.join(__dirname, '..', '.env'), override: true });
 
 const requiredEnvVars = ['APP_PASSWORD', 'JWT_SECRET'] as const;
 const missingEnv = requiredEnvVars.filter(v => !process.env[v]);
@@ -33,7 +33,7 @@ async function startServer() {
   app.use('/api/entries', entriesRoutes);
 
   // Serve built client static files
-  const distPath = path.join(__dirname, '../../client/dist');
+  const distPath = path.join(__dirname, '../client/dist');
   app.use(express.static(distPath));
 
   // SPA fallback: serve index.html for any non-API route

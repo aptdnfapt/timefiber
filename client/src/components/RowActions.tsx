@@ -5,9 +5,10 @@ interface RowActionsProps {
   currentColor: string | null;
   onColorSelect: (color: string) => void;
   onDelete: () => void;
+  mobile?: boolean;
 }
 
-export default function RowActions({ currentColor, onColorSelect, onDelete }: RowActionsProps) {
+export default function RowActions({ currentColor, onColorSelect, onDelete, mobile }: RowActionsProps) {
   const [open, setOpen] = useState(false);
   const [showColors, setShowColors] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -34,7 +35,7 @@ export default function RowActions({ currentColor, onColorSelect, onDelete }: Ro
     <div ref={ref} className="relative inline-block">
       <button
         onClick={() => { setOpen(!open); setShowColors(false); }}
-        className="opacity-0 group-hover:opacity-100 transition-opacity text-[var(--text-muted)] hover:text-[var(--text-main)] text-lg leading-none px-1"
+        className={`${mobile ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity text-[var(--text-muted)] hover:text-[var(--text-main)] text-lg leading-none px-1`}
         title="Row actions"
       >
         ⋮

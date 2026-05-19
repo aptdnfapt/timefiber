@@ -10,7 +10,7 @@ const COLUMNS = [
   { key: 'week_number' as const, label: 'Week No', width: '5%' },
   { key: 'month_number' as const, label: 'Month No', width: '5%' },
   { key: 'date' as const, label: 'Date', width: '5%' },
-  { key: 'day_name' as const, label: 'Day Name', width: '7.5%' },
+  { key: 'day_name' as const, label: 'Day', width: '7.5%' },
   { key: 'season' as const, label: 'Season', width: '7.5%' },
   { key: 'time_string' as const, label: 'Time', width: '7.5%' },
   { key: 'detail' as const, label: 'Detail', width: '14.5%' },
@@ -22,6 +22,7 @@ export default function App() {
   const [authenticated, setAuthenticated] = useState(false);
   const [entries, setEntries] = useState<Entry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [expandedId, setExpandedId] = useState<number | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const checkAuth = useCallback(async () => {
@@ -60,6 +61,7 @@ export default function App() {
     if (!confirm('Delete this row?')) return;
     await api.deleteEntry(id);
     setEntries((prev) => prev.filter((e) => e.id !== id));
+    if (expandedId === id) setExpandedId(null);
   };
 
   const addRow = async () => {
@@ -93,12 +95,16 @@ export default function App() {
     });
 
     setEntries((prev) => [...prev, newEntry]);
+    setExpandedId(newEntry.id);
 
     setTimeout(() => {
-      scrollRef.current?.scrollTo({
-        top: scrollRef.current.scrollHeight,
-        behavior: 'smooth',
-      });
+      const container = scrollRef.current;
+      if (container) {
+        container.scrollTo({
+          top: container.scrollHeight,
+          behavior: 'smooth',
+        });
+      }
       const cell = document.getElementById(`activity-${newEntry.id}`);
       cell?.focus();
     }, 50);
@@ -118,26 +124,108 @@ export default function App() {
 
   return (
     <div className="h-screen flex flex-col">
-      {/* Header */}
-      <header className="flex-shrink-0 flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 border-b-2 border-[var(--accent)] gap-4">
-        <h1 className="font-playfair text-2xl sm:text-3xl text-[var(--text-main)] flex items-center gap-3">
+      <header className="flex-shrink-0 flex flex-col sm:flex-row justify-between items-start sm:items-center p-3 sm:p-4 border-b-2 border-[var(--accent)] gap-3 sm:gap-4">
+        <h1 className="font-playfair text-xl sm:text-3xl text-[var(--text-main)] flex items-center gap-2 sm:gap-3">
           LogTracker
-          <span className="text-[var(--accent)] italic font-playfair text-lg">/ Season</span>
+          <span className="text-[var(--accent)] italic font-playfair text-sm sm:text-lg">/ Season</span>
         </h1>
-        
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full sm:w-auto">
+
+        <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
           <ThemeSelector />
           <button
             onClick={addRow}
-            className="bg-[var(--btn-bg)] text-[var(--btn-text)] px-4 py-2 rounded-md font-bold text-sm hover:-translate-y-0.5 transition-transform shadow-md whitespace-nowrap"
+            className="bg-[var(--btn-bg)] text-[var(--btn-text)] px-3 sm:px-4 py-2 rounded-md font-bold text-sm hover:-translate-y-0.5 transition-transform shadow-md whitespace-nowrap"
           >
-            + Add New Row
+            + Add
           </button>
         </div>
       </header>
 
-      {/* Table */}
-      <div ref={scrollRef} className="flex-grow overflow-y-auto overflow-x-hidden pb-12">
+      {/* ─── Mobile: accordion rows ─── */}
+      <div ref={scrollRef} className="flex-grow overflow-y-auto pb-12 md:hidden">
+        {entries.length === 0 && (
+          <p className="text-center text-[var(--text-muted)] mt-8">No entries yet</p>
+        )}
+
+        {entries.map((entry) => {
+          const isExpanded = expandedId === entry.id;
+          const colorConfig = entry.row_color && entry.row_color !== 'none'
+            ? ROW_COLORS[entry.row_color]
+            : null;
+
+          return (
+            <div
+              key={entry.id}
+              className={`row-entry ${isExpanded ? 'row-expanded' : 'row-collapsed'}`}
+              style={{
+                borderLeftColor: colorConfig?.bg || 'var(--border)',
+                backgroundColor: isExpanded ? (colorConfig?.bg || 'var(--bg-color)') : 'transparent',
+              }}
+            >
+              <div className="row-preview" onClick={() => setExpandedId(isExpanded ? null : entry.id)}>
+                <div className="row-preview-top">
+                  <div className="row-preview-meta" style={{ color: colorConfig?.text || 'var(--text-muted)' }}>
+                    <span className="row-preview-day" style={{ color: colorConfig?.text || 'var(--text-main)' }}>
+                      {entry.day_name?.slice(0, 3) || '—'}
+                    </span>
+                    <span>{entry.date || '—'}</span>
+                    <span className="row-preview-season" style={{ color: colorConfig?.text || 'var(--accent)' }}>
+                      {entry.season || '—'}
+                    </span>
+                    <span>{entry.time_string || '—'}</span>
+                  </div>
+                  <div className="row-preview-ctrl" onClick={(e) => e.stopPropagation()}>
+                    <div className="row-preview-dots">
+                      <RowActions
+                        currentColor={entry.row_color}
+                        onColorSelect={(color: string) => updateCell(entry.id, 'row_color', color)}
+                        onDelete={() => deleteRow(entry.id)}
+                        mobile
+                      />
+                    </div>
+                    <span className={`row-chevron ${isExpanded ? 'rotate-90' : ''}`}>›</span>
+                  </div>
+                </div>
+                <div className={`row-preview-body ${isExpanded ? 'body-collapsed' : ''}`}>
+                  <div className="row-preview-activity" style={{ color: colorConfig?.text || 'var(--text-main)' }}>
+                    {entry.activity ? entry.activity.replace(/[#*_`]/g, '') : '—'}
+                  </div>
+                  <div className="row-preview-bottom">
+                    {entry.detail && (
+                      <span style={{ color: colorConfig?.text || 'var(--text-muted)' }}>{entry.detail}</span>
+                    )}
+                    {entry.place && (
+                      <span style={{ color: colorConfig?.text || 'var(--text-muted)' }}>{entry.place}</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className={`row-detail ${isExpanded ? 'row-detail-open' : ''}`}>
+                <div className="row-detail-inner">
+                  <div className="row-detail-grid">
+                    {COLUMNS.map((col) => (
+                      <div key={col.key} className={`row-field ${col.key === 'activity' ? 'row-field-full' : ''}`}>
+                        <label className="row-field-label">{col.label}</label>
+                        <div style={{ color: colorConfig?.text || 'var(--text-main)' }}>
+                          <EditableCell
+                            value={entry[col.key] || ''}
+                            onSave={(v: string) => updateCell(entry.id, col.key, v)}
+                            markdown={col.key === 'activity'}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* ─── Desktop: full table ─── */}
+      <div className="hidden md:flex md:flex-col md:flex-grow md:overflow-y-auto md:overflow-x-hidden md:pb-12">
         <table className="w-full table-fixed border-collapse">
           <thead className="sticky top-0 bg-[var(--header-bg)] z-10 shadow-sm">
             <tr>
@@ -156,17 +244,15 @@ export default function App() {
           </thead>
           <tbody>
             {entries.map((entry) => {
-              const colorConfig = entry.row_color && entry.row_color !== 'none' 
-                ? ROW_COLORS[entry.row_color] 
+              const colorConfig = entry.row_color && entry.row_color !== 'none'
+                ? ROW_COLORS[entry.row_color]
                 : null;
-              
+
               return (
                 <tr
                   key={entry.id}
                   className="group transition-colors"
-                  style={{
-                    backgroundColor: colorConfig?.bg || 'transparent',
-                  }}
+                  style={{ backgroundColor: colorConfig?.bg || 'transparent' }}
                 >
                   {COLUMNS.map((col) => (
                     <td
@@ -175,16 +261,9 @@ export default function App() {
                       style={{ color: colorConfig?.text || 'var(--text-main)' }}
                     >
                       {col.key === 'activity' ? (
-                        <EditableCell
-                          value={entry[col.key] || ''}
-                          onSave={(v: string) => updateCell(entry.id, col.key, v)}
-                          markdown
-                        />
+                        <EditableCell value={entry[col.key] || ''} onSave={(v: string) => updateCell(entry.id, col.key, v)} markdown />
                       ) : (
-                        <EditableCell
-                          value={entry[col.key] || ''}
-                          onSave={(v: string) => updateCell(entry.id, col.key, v)}
-                        />
+                        <EditableCell value={entry[col.key] || ''} onSave={(v: string) => updateCell(entry.id, col.key, v)} />
                       )}
                     </td>
                   ))}

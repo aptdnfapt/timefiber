@@ -1,0 +1,23 @@
+# Server - Node + SQLite
+node_modules/
+dist/
+*.log
+logs/
+
+# Database (auto-generated)
+database.sqlite
+*.sqlite
+*.sqlite3
+*.db
+
+# Environment (contains secrets)
+.env
+.env.local
+.env.*.local
+
+# Keep example template
+!.env.example
+
+# Temporary files
+*.tmp
+.tmp/

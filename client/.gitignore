@@ -1,0 +1,22 @@
+# Client - React + Vite
+node_modules/
+dist/
+dist-ssr/
+*.local
+*.log
+
+# Testing
+coverage/
+
+# Cypress
+cypress/videos/
+cypress/screenshots/
+
+# Temporary files
+*.tmp
+.cache/
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
+.idea/

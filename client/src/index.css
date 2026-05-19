@@ -1,0 +1,224 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Playfair+Display:ital,wght@0,600;1,600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-color: #F7F5F0;
+  --header-bg: #EAE6DB;
+  --text-main: #2A2521;
+  --text-muted: #5C554D;
+  --border: #D1CBC0;
+  --accent: #A67546;
+  --focus-bg: #ffffff;
+  --btn-bg: #4A3C31;
+  --btn-text: #F7F5F0;
+  --del-btn: #d65c5c;
+}
+
+[data-theme="midnight"] {
+  --bg-color: #12131C;
+  --header-bg: #1A1C29;
+  --text-main: #E1E3EB;
+  --text-muted: #858B9D;
+  --border: #2A2C3E;
+  --accent: #5F6DD8;
+  --focus-bg: #181925;
+  --btn-bg: #A2B1EB;
+  --btn-text: #12131C;
+}
+
+[data-theme="nature"] {
+  --bg-color: #F1F4F2;
+  --header-bg: #DCE5E0;
+  --text-main: #1C3326;
+  --text-muted: #496655;
+  --border: #C1D1C7;
+  --accent: #D97E33;
+  --focus-bg: #ffffff;
+  --btn-bg: #2B523B;
+  --btn-text: #F1F4F2;
+}
+
+[data-theme="cyberpunk"] {
+  --bg-color: #06020A;
+  --header-bg: #13031B;
+  --text-main: #00F3FF;
+  --text-muted: #D13BD0;
+  --border: #3A0F57;
+  --accent: #FF007F;
+  --focus-bg: #0D0315;
+  --btn-bg: #FDF900;
+  --btn-text: #06020A;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100vh;
+  width: 100vw;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-main);
+  font-family: 'Inter', sans-serif;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-color);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
+}
+
+/* Markdown cell render - compact, no size inflation */
+.md-render {
+  font-size: 1em;
+  line-height: 1.5;
+}
+.md-render h1 {
+  font-size: 1em;
+  font-weight: 700;
+  margin: 0.4em 0 0.2em;
+  color: var(--md-h1, var(--accent));
+}
+.md-render h2 {
+  font-size: 1em;
+  font-weight: 700;
+  margin: 0.35em 0 0.2em;
+  color: var(--md-h2, var(--text-main));
+}
+.md-render h3 {
+  font-size: 1em;
+  font-weight: 600;
+  margin: 0.3em 0 0.15em;
+  color: var(--md-h3, var(--accent));
+}
+.md-render h4,
+.md-render h5,
+.md-render h6 {
+  font-size: 1em;
+  font-weight: 600;
+  margin: 0.25em 0 0.1em;
+  color: var(--md-h4, var(--text-muted));
+}
+.md-render p {
+  margin: 0.2em 0;
+}
+.md-render ul, .md-render ol {
+  margin: 0.2em 0;
+  padding-left: 1.5em;
+}
+.md-render li {
+  margin: 0;
+}
+.md-render strong {
+  font-weight: 600;
+  color: var(--md-strong, var(--text-main));
+}
+.md-render em {
+  color: var(--md-em, var(--text-muted));
+  font-style: italic;
+}
+.md-render code {
+  font-weight: 500;
+  font-size: 0.9em;
+  background: var(--header-bg);
+  padding: 0.1em 0.3em;
+  border-radius: 3px;
+  color: var(--md-code, var(--accent));
+}
+.md-render pre {
+  background: var(--header-bg);
+  padding: 0.4em 0.6em;
+  border-radius: 4px;
+  font-size: 0.85em;
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin: 0.3em 0;
+}
+.md-render pre code {
+  background: none;
+  padding: 0;
+  color: var(--text-main);
+}
+.md-render blockquote {
+  border-left: 3px solid var(--accent);
+  padding-left: 0.8em;
+  margin: 0.3em 0;
+  color: var(--text-muted);
+  font-style: italic;
+}
+.md-render hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 0.4em 0;
+}
+.md-render a {
+  color: var(--accent);
+  text-decoration: underline;
+}
+.md-render .md-quote-str {
+  color: var(--md-quote, var(--accent));
+  font-weight: 500;
+}
+
+/* Theme overrides for markdown colors */
+:root {
+  --md-h1: #8B5E34;
+  --md-h2: #2A2521;
+  --md-h3: #A67546;
+  --md-h4: #5C554D;
+  --md-strong: #2A2521;
+  --md-em: #5C554D;
+  --md-code: #A67546;
+  --md-quote: #A67546;
+}
+[data-theme="midnight"] {
+  --md-h1: #A2B1EB;
+  --md-h2: #E1E3EB;
+  --md-h3: #858B9D;
+  --md-h4: #6B7093;
+  --md-strong: #E1E3EB;
+  --md-em: #858B9D;
+  --md-code: #5F6DD8;
+  --md-quote: #5F6DD8;
+}
+[data-theme="nature"] {
+  --md-h1: #2B523B;
+  --md-h2: #1C3326;
+  --md-h3: #D97E33;
+  --md-h4: #496655;
+  --md-strong: #1C3326;
+  --md-em: #496655;
+  --md-code: #D97E33;
+  --md-quote: #D97E33;
+}
+[data-theme="cyberpunk"] {
+  --md-h1: #FF007F;
+  --md-h2: #00F3FF;
+  --md-h3: #FDF900;
+  --md-h4: #D13BD0;
+  --md-strong: #00F3FF;
+  --md-em: #D13BD0;
+  --md-code: #FF007F;
+  --md-quote: #FF007F;
+}

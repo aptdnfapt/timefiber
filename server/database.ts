@@ -1,19 +1,17 @@
-import sqlite3 from 'sqlite3';
-import { open, Database } from 'sqlite';
+import Database from 'better-sqlite3';
 import { fileURLToPath } from 'url';
 import path from 'path';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-let db: Database<sqlite3.Database>;
+let db: Database.Database;
 
-export async function initDatabase(): Promise<Database<sqlite3.Database>> {
-  db = await open({
-    filename: path.join(__dirname, 'database.sqlite'),
-    driver: sqlite3.Database
-  });
+export function initDatabase(): Database.Database {
+  db = new Database(path.join(__dirname, 'database.sqlite'));
 
-  await db.exec(`
+  db.pragma('journal_mode = WAL');
+
+  db.exec(`
     CREATE TABLE IF NOT EXISTS entries (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       week_number TEXT,
@@ -34,6 +32,6 @@ export async function initDatabase(): Promise<Database<sqlite3.Database>> {
   return db;
 }
 
-export function getDb(): Database<sqlite3.Database> {
+export function getDb(): Database.Database {
   return db;
 }

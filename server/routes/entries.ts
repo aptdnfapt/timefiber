@@ -7,7 +7,7 @@ const router = express.Router();
 
 router.get('/', verifyToken, async (req: AuthRequest, res: Response) => {
   const db = getDb();
-  const entries = await db.all('SELECT * FROM entries ORDER BY created_at ASC');
+  const entries = db.prepare('SELECT * FROM entries ORDER BY created_at ASC').all();
   res.json(entries);
 });
 
@@ -16,15 +16,14 @@ router.post('/', verifyToken, async (req: AuthRequest, res: Response) => {
   const { week_number, month_number, date, day_name, season, 
           time_string, detail, place, activity } = req.body;
 
-  const result = await db.run(
+  const result = db.prepare(
     `INSERT INTO entries (week_number, month_number, date, day_name, season, 
       time_string, detail, place, activity) 
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [week_number, month_number, date, day_name, season, 
-     time_string, detail, place, activity]
-  );
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+  ).run(week_number, month_number, date, day_name, season, 
+       time_string, detail, place, activity);
 
-  const entry = await db.get('SELECT * FROM entries WHERE id = ?', result.lastID);
+  const entry = db.prepare('SELECT * FROM entries WHERE id = ?').get(result.lastInsertRowid);
   res.status(201).json(entry);
 });
 
@@ -40,19 +39,23 @@ router.put('/:id', verifyToken, async (req: AuthRequest, res: Response) => {
     return res.status(400).json({ error: 'Invalid column' });
   }
 
-  await db.run(
-    `UPDATE entries SET ${column} = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
-    [value, id]
-  );
+  const allowed = allowedColumns.includes(column);
+  if (!allowed) {
+    return res.status(400).json({ error: 'Invalid column' });
+  }
 
-  const entry = await db.get('SELECT * FROM entries WHERE id = ?', id);
+  db.prepare(
+    `UPDATE entries SET ${column} = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`
+  ).run(value, id);
+
+  const entry = db.prepare('SELECT * FROM entries WHERE id = ?').get(id);
   res.json(entry);
 });
 
 router.delete('/:id', verifyToken, async (req: AuthRequest, res: Response) => {
   const db = getDb();
   const { id } = req.params;
-  await db.run('DELETE FROM entries WHERE id = ?', id);
+  db.prepare('DELETE FROM entries WHERE id = ?').run(id);
   res.status(204).send();
 });
 

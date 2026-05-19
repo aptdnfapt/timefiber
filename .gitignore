@@ -27,3 +27,5 @@ Thumbs.db
 .env.local
 .env.*.local
 !.env.example
+database.sqlite-shm
+database.sqlite-wal

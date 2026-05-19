@@ -27,6 +27,7 @@ async function apiRequest<T>(path: string, options: RequestInit = {}): Promise<T
     throw new Error(error.error || 'Request failed');
   }
 
+  if (response.status === 204) return undefined as T;
   return response.json() as Promise<T>;
 }
 

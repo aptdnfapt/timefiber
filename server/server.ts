@@ -9,14 +9,17 @@ import entriesRoutes from './routes/entries.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// Load .env from project root (navigate up from server/ or server/dist/ to project root)
-dotenv.config({ path: path.resolve(__dirname, '..', '..', '.env'), override: true });
+// .env is at project root (/time-log/.env)
+// dev runs from server/ -> ../.env, prod runs from server/dist/ -> ../../.env
+const projectRoot = path.resolve(__dirname, __dirname.endsWith('/dist') ? '../..' : '..');
+dotenv.config({ path: path.join(projectRoot, '.env'), override: true });
 
+// Verify env loaded regardless of source (dotenv or shell export)
 const requiredEnvVars = ['APP_PASSWORD', 'JWT_SECRET'] as const;
 const missingEnv = requiredEnvVars.filter(v => !process.env[v]);
 if (missingEnv.length) {
   console.error(`Missing required env vars: ${missingEnv.join(', ')}`);
-  console.error('Create a .env file based on .env.example');
+  console.error('Create a .env file at project root based on .env.example');
   process.exit(1);
 }
 
@@ -32,8 +35,8 @@ async function startServer() {
   app.use('/api/auth', authRoutes);
   app.use('/api/entries', entriesRoutes);
 
-  // Serve built client static files
-  const distPath = path.resolve(__dirname, '..', '..', 'client/dist');
+  // Serve built client static files (relative to project root)
+  const distPath = path.join(projectRoot, 'client/dist');
   app.use(express.static(distPath));
 
   // SPA fallback: serve index.html for any non-API route

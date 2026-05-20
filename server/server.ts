@@ -5,6 +5,7 @@ import path from 'path';
 import { initDatabase } from './database.js';
 import authRoutes from './routes/auth.js';
 import entriesRoutes from './routes/entries.js';
+import uploadsRoutes from './routes/uploads.js';
 
 const projectRoot = path.resolve(process.cwd(), '..');
 dotenv.config({ path: path.join(projectRoot, '.env'), override: true });
@@ -29,14 +30,19 @@ async function startServer() {
 
   app.use('/api/auth', authRoutes);
   app.use('/api/entries', entriesRoutes);
+  app.use('/api/uploads', uploadsRoutes);
+
+  // Serve uploaded files
+  const uploadsPath = path.join(projectRoot, 'data/uploads');
+  app.use('/uploads', express.static(uploadsPath));
 
   // Serve built client static files (relative to project root)
   const distPath = path.join(projectRoot, 'client/dist');
   app.use(express.static(distPath));
 
-  // SPA fallback: serve index.html for any non-API route
+  // SPA fallback: serve index.html for any non-API, non-uploads route
   app.get('*', (req, res) => {
-    if (!req.path.startsWith('/api')) {
+    if (!req.path.startsWith('/api') && !req.path.startsWith('/uploads')) {
       res.sendFile(path.join(distPath, 'index.html'));
     }
   });

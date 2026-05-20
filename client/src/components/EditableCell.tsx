@@ -44,17 +44,21 @@ export default function EditableCell({
 }: EditableCellProps) {
   const [editing, setEditing] = useState(false);
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
   const divRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const savedRef = useRef(false);
 
   const handleImageBlob = useCallback(async (blob: Blob) => {
     if (!divRef.current) return;
+    setUploading(true);
     try {
       const url = await uploadImage(blob);
       insertTextAtCursor(divRef.current, `![](${url})`);
     } catch {
       // silently fail
+    } finally {
+      setUploading(false);
     }
   }, []);
 
@@ -139,7 +143,7 @@ export default function EditableCell({
       <div className="relative">
         <div
           ref={divRef}
-          contentEditable
+          contentEditable={!uploading}
           suppressContentEditableWarning
           className={`outline-none min-h-[1.4em] cursor-text p-1 pr-10 rounded whitespace-pre-wrap ${className}`}
           onBlur={handleBlur}
@@ -154,11 +158,12 @@ export default function EditableCell({
           accept="image/*"
           className="hidden"
           onChange={handleFileChange}
+          onClick={(e) => { (e.target as HTMLInputElement).value = ''; }}
         />
         <button
           className="absolute bottom-1 right-1 w-6 h-6 flex items-center justify-center rounded text-[var(--text-muted)] hover:text-[var(--accent)] hover:bg-[var(--header-bg)] transition-colors"
           title="Attach image"
-          onClick={(e) => { e.preventDefault(); fileInputRef.current?.click(); }}
+          onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); fileInputRef.current?.click(); }}
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
@@ -166,6 +171,14 @@ export default function EditableCell({
             <polyline points="21,15 16,10 5,21"/>
           </svg>
         </button>
+        {uploading && (
+          <div className="absolute inset-0 bg-[var(--bg-color)]/50 flex items-center justify-center rounded z-10">
+            <svg className="animate-spin h-5 w-5 text-[var(--accent)]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+            </svg>
+          </div>
+        )}
       </div>
     );
   }

@@ -48,7 +48,8 @@ const mdParser = new Marked(
       }
       return hljs.highlight(code, { language: 'plaintext' }).value;
     },
-  })
+  }),
+  { gfm: true, breaks: true }
 );
 
 mdParser.use({
@@ -70,7 +71,51 @@ mdParser.use({
   },
 });
 
-mdParser.setOptions({ gfm: true, breaks: true });
+function processTextTokens(token: any, regex: RegExp) {
+  if (token.type === 'text' && token.text && regex.test(token.text)) {
+    regex.lastIndex = 0;
+    const newTokens: any[] = [];
+    let lastIdx = 0;
+    for (const match of token.text.matchAll(regex)) {
+      const idx = match.index!;
+      if (idx > lastIdx) {
+        newTokens.push({ type: 'text', raw: token.text.slice(lastIdx, idx), text: token.text.slice(lastIdx, idx) });
+      }
+      newTokens.push({
+        type: 'html',
+        raw: match[0],
+        text: `<span class="md-quote-str">${match[2]}</span>`,
+      });
+      lastIdx = idx + match[0].length;
+    }
+    if (lastIdx < token.text.length) {
+      newTokens.push({ type: 'text', raw: token.text.slice(lastIdx), text: token.text.slice(lastIdx) });
+    }
+    return newTokens;
+  }
+  if (token.tokens) {
+    const newChildren: any[] = [];
+    for (const child of token.tokens) {
+      const processed = processTextTokens(child, regex);
+      if (Array.isArray(processed)) {
+        newChildren.push(...processed);
+      } else {
+        newChildren.push(child);
+      }
+    }
+    token.tokens = newChildren;
+  }
+  return null; // signal: already modified in-place
+}
+
+mdParser.use({
+  walkTokens(token: any) {
+    const regex = /(['"])(.+?)\1(?=\s|[.,;:!?)"'/<\-]|$)/g;
+    if (token.tokens) {
+      processTextTokens(token, regex);
+    }
+  },
+});
 
 export function renderMarkdown(raw: string): string {
   const html = mdParser.parse(raw) as string;

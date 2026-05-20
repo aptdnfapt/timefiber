@@ -145,8 +145,15 @@ body {
   margin: 0.2em 0;
   padding-left: 1.5em;
 }
+.md-render ol {
+  list-style-type: decimal;
+}
 .md-render li {
   margin: 0;
+}
+.md-render .md-quote-str {
+  color: var(--md-quote, var(--accent));
+  font-weight: 500;
 }
 .md-render strong {
   font-weight: 600;

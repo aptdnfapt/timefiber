@@ -49,17 +49,29 @@ describe('MarkdownRenderer', () => {
     expect(out).toContain('<code>const</code>');
   });
 
-  it('single quotes render as plain text, not mangled', () => {
+  it("apostrophes like don't are NOT highlighted", () => {
     const out = renderMarkdown("it's working");
-    // no span.md-quote-str wrapping (&#39; is normal HTML escaping, rendered as ' in browser)
     expect(out).not.toContain('md-quote-str');
     expect(out).toContain('&#39;');
   });
 
-  it('double quotes render as plain text, not mangled', () => {
-    const out = renderMarkdown('she said "hello"');
-    expect(out).not.toContain('md-quote-str');
-    expect(out).toContain('&quot;');
+  it('single-quoted text gets md-quote-str wrapping', () => {
+    const out = renderMarkdown("'hello world'");
+    expect(out).toContain('md-quote-str');
+    expect(out).toContain('hello world');
+  });
+
+  it('double-quoted text gets md-quote-str wrapping', () => {
+    const out = renderMarkdown('"hello world"');
+    expect(out).toContain('md-quote-str');
+    expect(out).toContain('hello world');
+  });
+
+  it('ordered list renders with ol and li', () => {
+    const out = renderMarkdown('1. first\n2. second');
+    expect(out).toContain('<ol>');
+    expect(out).toContain('<li>first</li>');
+    expect(out).toContain('<li>second</li>');
   });
 
   it('links render with target="_blank"', () => {

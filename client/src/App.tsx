@@ -26,7 +26,7 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const { locked, lock, unlock } = useLockManager();
+  const { locked, lock, unlock: rawUnlock } = useLockManager();
 
   const checkAuth = useCallback(async () => {
     const token = localStorage.getItem('auth_token');
@@ -45,9 +45,24 @@ export default function App() {
     }
   }, []);
 
+  const unlock = useCallback(async (password: string) => {
+    const ok = await rawUnlock(password);
+    if (ok) {
+      await checkAuth();
+    }
+    return ok;
+  }, [rawUnlock, checkAuth]);
+
   useEffect(() => {
-    checkAuth();
-  }, [checkAuth]);
+    const token = localStorage.getItem('auth_token');
+    if (!token) {
+      setLoading(false);
+      return;
+    }
+    if (!locked) {
+      checkAuth();
+    }
+  }, [locked, checkAuth]);
 
   const handleLogin = () => {
     checkAuth();
@@ -113,16 +128,16 @@ export default function App() {
     }, 50);
   };
 
+  if (locked) {
+    return <LockOverlay onUnlock={unlock} />;
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <p className="text-[var(--text-muted)]">Loading...</p>
       </div>
     );
-  }
-
-  if (locked) {
-    return <LockOverlay onUnlock={unlock} />;
   }
 
   if (!authenticated) {

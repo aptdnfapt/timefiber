@@ -30,9 +30,9 @@ export default function Login({ onLogin }: LoginProps) {
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="bg-[var(--header-bg)] border border-[var(--border)] rounded-lg p-8 w-full max-w-md">
         <h1 className="font-playfair text-3xl text-[var(--text-main)] mb-2">
-          LogTracker
+          TimeFiber
         </h1>
-        <p className="text-[var(--text-muted)] mb-6">Season / Infinity Table</p>
+        <p className="text-[var(--text-muted)] mb-6">Time Tracking / Infinity Table</p>
 
         <form onSubmit={handleSubmit}>
           <input

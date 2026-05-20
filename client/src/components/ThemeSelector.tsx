@@ -13,7 +13,7 @@ export default function ThemeSelector() {
   const [active, setActive] = useState<Theme>('daybook');
 
   useEffect(() => {
-    const saved = localStorage.getItem('chrono_theme') as Theme;
+    const saved = localStorage.getItem('timefiber_theme') as Theme;
     if (saved) {
       setActive(saved);
       document.documentElement.setAttribute('data-theme', saved);
@@ -23,7 +23,7 @@ export default function ThemeSelector() {
   const setTheme = (theme: Theme) => {
     setActive(theme);
     document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('chrono_theme', theme);
+    localStorage.setItem('timefiber_theme', theme);
   };
 
   return (

@@ -1,4 +1,4 @@
-# Chronolog
+# TimeFiber
 
 Personal time tracker with a diary-style table. Daybook / Midnight / Nature / Cyberpunk themes.
 

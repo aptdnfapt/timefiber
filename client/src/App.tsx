@@ -126,8 +126,8 @@ export default function App() {
     <div className="h-screen flex flex-col">
       <header className="flex-shrink-0 flex flex-col sm:flex-row justify-between items-start sm:items-center p-3 sm:p-4 border-b-2 border-[var(--accent)] gap-3 sm:gap-4">
         <h1 className="font-playfair text-xl sm:text-3xl text-[var(--text-main)] flex items-center gap-2 sm:gap-3">
-          LogTracker
-          <span className="text-[var(--accent)] italic font-playfair text-sm sm:text-lg">/ Season</span>
+          TimeFiber
+          <span className="text-[var(--accent)] italic font-playfair text-sm sm:text-lg">/ Time Tracking</span>
         </h1>
 
         <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">

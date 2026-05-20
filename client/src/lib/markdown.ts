@@ -64,7 +64,7 @@ mdParser.use({
       const uuid = url.split('/').pop() || url;
       return `<picture class="md-img-wrap">
         <source srcset="/uploads/${uuid}.avif" type="image/avif">
-        <img src="/uploads/${uuid}.webp" loading="lazy" alt="${alt}" class="md-img-inline" onclick="window.dispatchEvent(new CustomEvent('lightbox-open',{detail:'/uploads/${uuid}.avif'}))">
+        <img src="/uploads/${uuid}.webp" loading="lazy" alt="${alt}" class="md-img-inline" onclick="event.stopPropagation();window.dispatchEvent(new CustomEvent('lightbox-open',{detail:'/uploads/${uuid}.avif'}))">
       </picture>`;
     },
   },

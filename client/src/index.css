@@ -89,6 +89,24 @@ body {
   background: var(--accent);
 }
 
+/* Inline image thumbnails */
+.md-img-wrap {
+  display: inline-block;
+  margin: 0.2em 0;
+  vertical-align: top;
+}
+.md-img-inline {
+  max-width: 200px;
+  max-height: 150px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: block;
+  transition: opacity 0.15s ease;
+}
+.md-img-inline:hover {
+  opacity: 0.85;
+}
+
 /* Markdown cell render - compact, no size inflation */
 .md-render {
   font-size: 1em;

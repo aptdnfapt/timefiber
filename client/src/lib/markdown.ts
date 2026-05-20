@@ -58,6 +58,15 @@ mdParser.use({
       const text = token.text || token.tokens?.map((t: any) => t.raw || '').join('') || '';
       return `<a href="${href}" target="_blank">${text}</a>`;
     },
+    image(token: any) {
+      const url = token.href || '';
+      const alt = token.text || '';
+      const uuid = url.split('/').pop() || url;
+      return `<picture class="md-img-wrap">
+        <source srcset="/uploads/${uuid}.avif" type="image/avif">
+        <img src="/uploads/${uuid}.webp" loading="lazy" alt="${alt}" class="md-img-inline" onclick="window.dispatchEvent(new CustomEvent('lightbox-open',{detail:'/uploads/${uuid}.avif'}))">
+      </picture>`;
+    },
   },
 });
 

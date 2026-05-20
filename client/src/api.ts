@@ -16,7 +16,7 @@ async function apiRequest<T>(path: string, options: RequestInit = {}): Promise<T
     headers,
   });
 
-  if (response.status === 401 && path !== '/auth/login') {
+  if (response.status === 401 && path !== '/auth/login' && path !== '/auth/verify') {
     localStorage.removeItem('auth_token');
     window.location.reload();
     throw new Error('Unauthorized');
@@ -34,6 +34,12 @@ async function apiRequest<T>(path: string, options: RequestInit = {}): Promise<T
 export const api = {
   login: (password: string) =>
     apiRequest<{ token: string }>('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ password }),
+    }),
+
+  verifyPassword: (password: string) =>
+    apiRequest<{ valid: boolean }>('/auth/verify', {
       method: 'POST',
       body: JSON.stringify({ password }),
     }),

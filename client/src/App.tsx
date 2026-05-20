@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Entry, ROW_COLORS } from './types';
 import { api } from './api';
+import { useLockManager } from './lib/lock';
 import Login from './components/Login';
+import LockOverlay from './components/LockOverlay';
 import ThemeSelector from './components/ThemeSelector';
 import EditableCell from './components/EditableCell';
 import RowActions from './components/RowActions';
@@ -24,6 +26,7 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const { locked, lock, unlock } = useLockManager();
 
   const checkAuth = useCallback(async () => {
     const token = localStorage.getItem('auth_token');
@@ -118,6 +121,10 @@ export default function App() {
     );
   }
 
+  if (locked) {
+    return <LockOverlay onUnlock={unlock} />;
+  }
+
   if (!authenticated) {
     return <Login onLogin={handleLogin} />;
   }
@@ -132,6 +139,12 @@ export default function App() {
 
         <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
           <ThemeSelector />
+          <button
+            onClick={lock}
+            className="bg-[var(--header-bg)] text-[var(--text-muted)] border border-[var(--border)] px-3 py-2 rounded-md text-sm hover:text-[var(--text-main)] hover:border-[var(--accent)] transition-colors whitespace-nowrap"
+          >
+            Lock
+          </button>
           <button
             onClick={addRow}
             className="bg-[var(--btn-bg)] text-[var(--btn-text)] px-3 sm:px-4 py-2 rounded-md font-bold text-sm hover:-translate-y-0.5 transition-transform shadow-md whitespace-nowrap"

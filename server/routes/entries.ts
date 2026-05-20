@@ -39,11 +39,6 @@ router.put('/:id', verifyToken, async (req: AuthRequest, res: Response) => {
     return res.status(400).json({ error: 'Invalid column' });
   }
 
-  const allowed = allowedColumns.includes(column);
-  if (!allowed) {
-    return res.status(400).json({ error: 'Invalid column' });
-  }
-
   db.prepare(
     `UPDATE entries SET ${column} = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`
   ).run(value, id);

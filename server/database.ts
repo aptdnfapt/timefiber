@@ -1,13 +1,41 @@
 import Database from 'better-sqlite3';
-import { fileURLToPath } from 'url';
 import path from 'path';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+import fs from 'fs';
 
 let db: Database.Database;
 
+function getDbPath(): string {
+  // project root = two levels up when running from server/ or server/dist/
+  const projectRoot = path.resolve(process.cwd(), '..');
+  const dataDir = path.join(projectRoot, 'data');
+  fs.mkdirSync(dataDir, { recursive: true });
+  return path.join(dataDir, 'database.sqlite');
+}
+
+function migrateOldDb(targetPath: string): void {
+  const possibleOldPaths = [
+    path.join(process.cwd(), 'database.sqlite'),
+    path.join(process.cwd(), 'dist', 'database.sqlite'),
+  ];
+
+  for (const oldPath of possibleOldPaths) {
+    if (fs.existsSync(oldPath) && oldPath !== targetPath) {
+      for (const ext of ['', '-shm', '-wal']) {
+        const oldFile = oldPath + ext;
+        if (fs.existsSync(oldFile)) {
+          fs.renameSync(oldFile, targetPath + ext);
+        }
+      }
+      console.log(`Migrated database from ${oldPath} → ${targetPath}`);
+      return;
+    }
+  }
+}
+
 export function initDatabase(): Database.Database {
-  db = new Database(path.join(__dirname, 'database.sqlite'));
+  const dbPath = getDbPath();
+  migrateOldDb(dbPath);
+  db = new Database(dbPath);
 
   db.pragma('journal_mode = WAL');
 

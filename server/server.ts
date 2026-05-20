@@ -2,15 +2,10 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
-import { fileURLToPath } from 'url';
 import { initDatabase } from './database.js';
 import authRoutes from './routes/auth.js';
 import entriesRoutes from './routes/entries.js';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-// .env is at project root (/time-log/.env)
-// script always runs with cwd = server/ (both dev and prod), so .env is at ../.env
 const projectRoot = path.resolve(process.cwd(), '..');
 dotenv.config({ path: path.join(projectRoot, '.env'), override: true });
 

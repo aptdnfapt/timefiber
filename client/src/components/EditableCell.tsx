@@ -1,22 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Marked } from 'marked';
-
-// custom renderer: wraps 'quoted' and "quoted" strings in highlighted spans
-const renderer = {
-  text(this: any, token: any) {
-    let text = token.text || token.tokens?.map((t: any) => t.raw || t.text || '').join('') || '';
-    // highlight single/double quoted strings
-    text = text.replace(/(&#39;|'[^']*?&#39;|'[^']*?')/g, '<span class="md-quote-str">$1</span>');
-    text = text.replace(/(&quot;|"[^"]*?&quot;|"[^"]*?")/g, '<span class="md-quote-str">$1</span>');
-    return text;
-  }
-};
-
-const mdParser = new Marked({
-  gfm: true,
-  breaks: true,
-  renderer: renderer as any
-});
+import { renderMarkdown } from '../lib/markdown';
 
 interface EditableCellProps {
   value: string;
@@ -85,11 +68,11 @@ export default function EditableCell({
   }
 
   if (markdown && value) {
-    const html = mdParser.parse(value) as string;
+    const html = renderMarkdown(value);
     return (
       <div
         onClick={() => setEditing(true)}
-        className={`cursor-text min-h-[1.4em] hover:bg-[var(--header-bg)]/60 p-1 rounded transition-colors md-render ${className}`}
+        className={`cursor-text min-h-[1.4em] hover:bg-[var(--header-bg)]/60 p-1 rounded transition-colors ${className}`}
         dangerouslySetInnerHTML={{ __html: html }}
       />
     );

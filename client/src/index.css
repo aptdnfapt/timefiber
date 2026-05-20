@@ -181,6 +181,41 @@ body {
   font-weight: 500;
 }
 
+/* syntax highlighting via hljs classes */
+.md-render .hljs {
+  background: var(--md-code-bg, var(--header-bg));
+  color: var(--text-main);
+}
+.md-render .hljs-keyword,
+.md-render .hljs-selector-tag,
+.md-render .hljs-type,
+.md-render .hljs-built_in {
+  color: var(--md-code-keyword, var(--accent));
+}
+.md-render .hljs-string,
+.md-render .hljs-addition,
+.md-render .hljs-attr,
+.md-render .hljs-attribute {
+  color: var(--md-code-string, var(--md-code));
+}
+.md-render .hljs-comment,
+.md-render .hljs-quote,
+.md-render .hljs-meta {
+  color: var(--md-code-comment, var(--text-muted));
+}
+.md-render .hljs-title.function_,
+.md-render .hljs-function .hljs-title,
+.md-render .hljs-title.class_ {
+  color: var(--md-code-function, var(--accent));
+}
+.md-render .hljs-number,
+.md-render .hljs-literal {
+  color: var(--md-code-keyword, var(--accent));
+}
+.md-render .hljs-regexp {
+  color: var(--md-code-string, var(--md-code));
+}
+
 /* Theme overrides for markdown colors */
 :root {
   --md-h1: #8B5E34;
@@ -191,6 +226,11 @@ body {
   --md-em: #5C554D;
   --md-code: #A67546;
   --md-quote: #A67546;
+  --md-code-bg: #EEECE3;
+  --md-code-keyword: #9A5D2D;
+  --md-code-string: #6B8E3F;
+  --md-code-comment: #9C968D;
+  --md-code-function: #C47530;
 }
 [data-theme="midnight"] {
   --md-h1: #A2B1EB;
@@ -201,6 +241,11 @@ body {
   --md-em: #858B9D;
   --md-code: #5F6DD8;
   --md-quote: #5F6DD8;
+  --md-code-bg: #141620;
+  --md-code-keyword: #A2B1EB;
+  --md-code-string: #7ECB8A;
+  --md-code-comment: #5A5F73;
+  --md-code-function: #C084FC;
 }
 [data-theme="nature"] {
   --md-h1: #2B523B;
@@ -211,6 +256,11 @@ body {
   --md-em: #496655;
   --md-code: #D97E33;
   --md-quote: #D97E33;
+  --md-code-bg: #E2E8E4;
+  --md-code-keyword: #3E7A33;
+  --md-code-string: #B86D2A;
+  --md-code-comment: #7D9487;
+  --md-code-function: #6B8E3F;
 }
 [data-theme="cyberpunk"] {
   --md-h1: #FF007F;
@@ -221,6 +271,11 @@ body {
   --md-em: #D13BD0;
   --md-code: #FF007F;
   --md-quote: #FF007F;
+  --md-code-bg: #0D0315;
+  --md-code-keyword: #FF7B00;
+  --md-code-string: #00F3FF;
+  --md-code-comment: #5A1E6E;
+  --md-code-function: #FDF900;
 }
 
 /* Accordion row system */

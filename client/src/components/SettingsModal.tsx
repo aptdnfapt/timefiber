@@ -33,6 +33,7 @@ export default function SettingsModal({ open, onClose, onSetAutoLockTimeout }: S
     const saved = localStorage.getItem('timefiber_theme') as Theme;
     if (saved) {
       setActive(saved);
+      document.documentElement.setAttribute('data-theme', saved);
     }
     const savedLock = localStorage.getItem('timefiber_autolock_timeout');
     if (savedLock) {

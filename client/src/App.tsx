@@ -55,6 +55,13 @@ export default function App() {
   }, [rawUnlock, checkAuth]);
 
   useEffect(() => {
+    const savedTheme = localStorage.getItem('timefiber_theme');
+    if (savedTheme) {
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    }
+  }, []);
+
+  useEffect(() => {
     const token = localStorage.getItem('auth_token');
     if (!token) {
       setLoading(false);

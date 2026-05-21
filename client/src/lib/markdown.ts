@@ -1,4 +1,4 @@
-import { Marked } from 'marked';
+import { Marked, type Token, type Tokens } from 'marked';
 import { markedHighlight } from 'marked-highlight';
 import hljs from 'highlight.js/lib/core';
 import javascript from 'highlight.js/lib/languages/javascript';
@@ -54,12 +54,12 @@ const mdParser = new Marked(
 
 mdParser.use({
   renderer: {
-    link(token: any) {
+    link(token: Tokens.Link) {
       const href = token.href || '';
-      const text = token.text || token.tokens?.map((t: any) => t.raw || '').join('') || '';
+      const text = token.text || token.tokens?.map((t: Token) => t.raw || '').join('') || '';
       return `<a href="${href}" target="_blank">${text}</a>`;
     },
-    image(token: any) {
+    image(token: Tokens.Image) {
       const url = token.href || '';
       const alt = token.text || '';
       const uuid = url.split('/').pop() || url;
@@ -71,13 +71,14 @@ mdParser.use({
   },
 });
 
-function processTextTokens(token: any, regex: RegExp) {
-  if (token.type === 'text' && token.text && regex.test(token.text)) {
+function processTextTokens(token: Token, regex: RegExp): Token[] | null {
+  if ('text' in token && token.type === 'text' && token.text && regex.test(token.text)) {
     regex.lastIndex = 0;
-    const newTokens: any[] = [];
+    const newTokens: Token[] = [];
     let lastIdx = 0;
     for (const match of token.text.matchAll(regex)) {
-      const idx = match.index!;
+      const idx = match.index;
+      if (idx === undefined) continue;
       if (idx > lastIdx) {
         newTokens.push({ type: 'text', raw: token.text.slice(lastIdx, idx), text: token.text.slice(lastIdx, idx) });
       }
@@ -85,6 +86,8 @@ function processTextTokens(token: any, regex: RegExp) {
         type: 'html',
         raw: match[0],
         text: `<span class="md-quote-str">${match[2]}</span>`,
+        pre: false,
+        block: false,
       });
       lastIdx = idx + match[0].length;
     }
@@ -93,8 +96,8 @@ function processTextTokens(token: any, regex: RegExp) {
     }
     return newTokens;
   }
-  if (token.tokens) {
-    const newChildren: any[] = [];
+  if ('tokens' in token && token.tokens) {
+    const newChildren: Token[] = [];
     for (const child of token.tokens) {
       const processed = processTextTokens(child, regex);
       if (Array.isArray(processed)) {
@@ -103,13 +106,13 @@ function processTextTokens(token: any, regex: RegExp) {
         newChildren.push(child);
       }
     }
-    token.tokens = newChildren;
+    (token as Tokens.Generic).tokens = newChildren;
   }
-  return null; // signal: already modified in-place
+  return null;
 }
 
 mdParser.use({
-  walkTokens(token: any) {
+  walkTokens(token: Token) {
     const regex = /(['"])(.+?)\1(?=\s|[.,;:!?)"'/<\-]|$)/g;
     if (token.tokens) {
       processTextTokens(token, regex);

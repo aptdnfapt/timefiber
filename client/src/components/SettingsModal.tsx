@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { api } from '../api';
 import type { Entry } from '../types';
+import ImageLightbox from './ImageLightbox';
 
 type Theme = 'daybook' | 'midnight' | 'nature' | 'cyberpunk';
 type SettingsTab = 'general' | 'gallery';
@@ -44,6 +45,7 @@ export default function SettingsModal({ open, onClose, onSetAutoLockTimeout, ent
   const [images, setImages] = useState<{ uuid: string; url: string }[]>([]);
   const [loading, setLoading] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const backdropRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -127,8 +129,8 @@ export default function SettingsModal({ open, onClose, onSetAutoLockTimeout, ent
       }}
     >
       <div
-        className="relative rounded-xl shadow-2xl border border-[var(--border)] w-full max-w-2xl mx-4 flex overflow-hidden"
-        style={{ backgroundColor: 'var(--bg-color)', maxHeight: '70vh' }}
+        className="relative rounded-xl shadow-2xl border border-[var(--border)] flex overflow-hidden"
+        style={{ backgroundColor: 'var(--bg-color)', width: '60vw', minWidth: '850px', height: '70vh', minHeight: '550px' }}
       >
         {/* X close button */}
         <button
@@ -140,8 +142,8 @@ export default function SettingsModal({ open, onClose, onSetAutoLockTimeout, ent
 
         {/* Sidebar */}
         <div
-          className="w-40 flex-shrink-0 border-r border-[var(--border)] p-3 flex flex-col gap-1"
-          style={{ backgroundColor: 'var(--header-bg)' }}
+          className="flex-shrink-0 border-r border-[var(--border)] p-3 flex flex-col gap-1"
+          style={{ backgroundColor: 'var(--header-bg)', width: '220px' }}
         >
           {sidebarItem('general', 'General')}
           {sidebarItem('gallery', 'Gallery')}
@@ -209,10 +211,13 @@ export default function SettingsModal({ open, onClose, onSetAutoLockTimeout, ent
               ) : images.length === 0 ? (
                 <p className="text-center text-[var(--text-muted)] py-10">No images uploaded yet</p>
               ) : (
-                <div className="grid grid-cols-4 gap-3">
+                <div className="grid grid-cols-6 gap-4">
                   {images.map((img) => (
                     <div key={img.uuid} className="relative group">
-                      <div className="aspect-square rounded-md overflow-hidden border border-[var(--border)] bg-[var(--header-bg)]">
+                      <div
+                        className="aspect-square rounded-md overflow-hidden border border-[var(--border)] bg-[var(--header-bg)] cursor-pointer"
+                        onClick={() => setPreviewUrl(`${img.url}.avif`)}
+                      >
                         <img
                           src={`${img.url}.webp`}
                           alt=""
@@ -239,6 +244,13 @@ export default function SettingsModal({ open, onClose, onSetAutoLockTimeout, ent
           )}
         </div>
       </div>
+
+      {/* Image preview lightbox */}
+      {previewUrl && (
+        <div className="fixed inset-0 z-[60]">
+          <ImageLightbox src={previewUrl} onClose={() => setPreviewUrl(null)} />
+        </div>
+      )}
 
       {/* Delete confirmation dialog */}
       {confirmDelete && (

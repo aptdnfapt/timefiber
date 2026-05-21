@@ -107,8 +107,8 @@ export default function ImageGalleryModal({ open, onClose, onSelect }: ImageGall
       }}
     >
       <div
-        className="relative rounded-xl shadow-2xl border border-[var(--border)] w-full max-w-lg mx-4 overflow-hidden"
-        style={{ backgroundColor: 'var(--bg-color)' }}
+        className="relative rounded-xl shadow-2xl border border-[var(--border)] flex flex-col overflow-hidden"
+        style={{ backgroundColor: 'var(--bg-color)', width: '60vw', minWidth: '800px', maxWidth: '1000px', height: '65vh', minHeight: '500px' }}
       >
         {/* X close button */}
         <button
@@ -143,9 +143,9 @@ export default function ImageGalleryModal({ open, onClose, onSelect }: ImageGall
         </div>
 
         {/* Content */}
-        <div className="p-4 max-h-[60vh] overflow-y-auto">
+        <div className="flex-1 p-4 overflow-y-auto flex flex-col">
           {tab === 'gallery' && (
-            <div>
+            <div className="flex-1">
               {loading ? (
                 <div className="flex items-center justify-center py-12">
                   <svg className="animate-spin h-6 w-6 text-[var(--accent)]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -156,7 +156,7 @@ export default function ImageGalleryModal({ open, onClose, onSelect }: ImageGall
               ) : images.length === 0 ? (
                 <p className="text-center text-[var(--text-muted)] py-10">No images uploaded yet</p>
               ) : (
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-5 gap-4">
                   {images.map((img) => (
                     <button
                       key={img.uuid}
@@ -178,7 +178,7 @@ export default function ImageGalleryModal({ open, onClose, onSelect }: ImageGall
 
           {tab === 'upload' && (
             <div
-              className={`flex flex-col items-center justify-center py-10 border-2 border-dashed rounded-lg transition-colors ${
+              className={`flex-1 flex flex-col items-center justify-center border-2 border-dashed rounded-lg transition-colors ${
                 dragActive ? 'border-[var(--accent)] bg-[var(--header-bg)]/30' : 'border-[var(--border)]'
               }`}
               onDrop={handleDrop}

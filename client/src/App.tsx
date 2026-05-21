@@ -7,6 +7,8 @@ import LockOverlay from './components/LockOverlay';
 import SettingsModal from './components/SettingsModal';
 import EditableCell from './components/EditableCell';
 import RowActions from './components/RowActions';
+import ImageLightbox from './components/ImageLightbox';
+
 
 const COLUMNS = [
   { key: 'week_number' as const, label: 'Week No', width: '5%' },
@@ -26,6 +28,7 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const { locked, lock, unlock: rawUnlock, setAutoLockTimeout } = useLockManager();
 
@@ -59,6 +62,15 @@ export default function App() {
     if (savedTheme) {
       document.documentElement.setAttribute('data-theme', savedTheme);
     }
+  }, []);
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail as string;
+      if (detail) setLightboxSrc(detail);
+    };
+    window.addEventListener('lightbox-open', handler);
+    return () => window.removeEventListener('lightbox-open', handler);
   }, []);
 
   useEffect(() => {
@@ -331,6 +343,13 @@ export default function App() {
         onClose={() => setSettingsOpen(false)}
         onSetAutoLockTimeout={setAutoLockTimeout}
       />
+
+      {lightboxSrc && (
+        <ImageLightbox
+          src={lightboxSrc}
+          onClose={() => setLightboxSrc(null)}
+        />
+      )}
     </div>
   );
 }

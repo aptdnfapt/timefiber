@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { renderMarkdown } from '../lib/markdown';
-import LightboxInline from './ImageLightbox';
 
 interface EditableCellProps {
   value: string;
@@ -43,11 +42,11 @@ export default function EditableCell({
   markdown = false
 }: EditableCellProps) {
   const [editing, setEditing] = useState(false);
-  const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const divRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const savedRef = useRef(false);
+  const fileDialogOpenRef = useRef(false);
 
   const handleImageBlob = useCallback(async (blob: Blob) => {
     if (!divRef.current) return;
@@ -78,16 +77,26 @@ export default function EditableCell({
   }, [editing]);
 
   useEffect(() => {
-    const handler = (e: Event) => {
-      const detail = (e as CustomEvent).detail as string;
-      if (detail) setLightboxSrc(detail);
+    const onWindowFocus = () => {
+      if (fileDialogOpenRef.current) {
+        setTimeout(() => {
+          fileDialogOpenRef.current = false;
+          if (divRef.current && document.activeElement !== divRef.current) {
+            divRef.current.focus();
+          }
+        }, 100);
+      }
     };
-    window.addEventListener('lightbox-open', handler);
-    return () => window.removeEventListener('lightbox-open', handler);
+    window.addEventListener('focus', onWindowFocus);
+    return () => window.removeEventListener('focus', onWindowFocus);
   }, []);
 
   const handleBlur = () => {
     if (savedRef.current) return;
+    if (fileDialogOpenRef.current) {
+      setTimeout(() => divRef.current?.focus(), 0);
+      return;
+    }
     savedRef.current = true;
     const text = divRef.current?.innerText || '';
     setEditing(false);
@@ -134,6 +143,7 @@ export default function EditableCell({
   };
 
   const handleFileChange = () => {
+    fileDialogOpenRef.current = false;
     const file = fileInputRef.current?.files?.[0];
     if (file) handleImageBlob(file);
   };
@@ -163,7 +173,7 @@ export default function EditableCell({
         <button
           className="absolute bottom-1 right-1 w-6 h-6 flex items-center justify-center rounded text-[var(--text-muted)] hover:text-[var(--accent)] hover:bg-[var(--header-bg)] transition-colors"
           title="Attach image"
-          onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); fileInputRef.current?.click(); }}
+          onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); fileDialogOpenRef.current = true; fileInputRef.current?.click(); }}
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
@@ -187,9 +197,6 @@ export default function EditableCell({
 
   return (
     <>
-      {lightboxSrc && (
-        <LightboxInline src={lightboxSrc} onClose={() => setLightboxSrc(null)} />
-      )}
       {displayMd ? (
         <div
           onClick={() => setEditing(true)}

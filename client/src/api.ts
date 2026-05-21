@@ -62,4 +62,12 @@ export const api = {
     apiRequest(`/entries/${id}`, {
       method: 'DELETE',
     }),
+
+  getImages: (): Promise<{ images: { uuid: string; url: string }[] }> =>
+    apiRequest<{ images: { uuid: string; url: string }[] }>('/uploads'),
+
+  deleteImage: (uuid: string) =>
+    apiRequest(`/uploads/${uuid}`, {
+      method: 'DELETE',
+    }),
 };

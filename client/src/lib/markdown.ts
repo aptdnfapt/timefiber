@@ -114,7 +114,7 @@ function processTextTokens(token: Token, regex: RegExp): Token[] | null {
 mdParser.use({
   walkTokens(token: Token) {
     const regex = /(['"])(.+?)\1(?=\s|[.,;:!?)"'/<\-]|$)/g;
-    if (token.tokens) {
+    if ('tokens' in token && token.tokens) {
       processTextTokens(token, regex);
     }
   },

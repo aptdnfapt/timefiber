@@ -4,6 +4,7 @@ import multer from 'multer';
 import sharp from 'sharp';
 import fs from 'fs';
 import path from 'path';
+import { verifyToken } from '../auth.js';
 
 const router = express.Router();
 
@@ -27,6 +28,51 @@ const upload = multer({
       cb(err);
     }
   },
+});
+
+router.get('/', verifyToken, (_req, res) => {
+  try {
+    ensureUploadsDir();
+    if (!fs.existsSync(UPLOADS_DIR)) {
+      return res.json({ images: [] });
+    }
+    const files = fs.readdirSync(UPLOADS_DIR);
+    const webpFiles = files.filter((f) => f.endsWith('.webp'));
+    const images = webpFiles
+      .map((f) => {
+        const uuid = f.slice(0, -5); // remove .webp
+        const fullPath = path.join(UPLOADS_DIR, f);
+        const stat = fs.statSync(fullPath);
+        return { uuid, url: `/uploads/${uuid}`, mtime: stat.mtimeMs };
+      })
+      .sort((a, b) => b.mtime - a.mtime)
+      .map(({ uuid, url }) => ({ uuid, url }));
+    res.json({ images });
+  } catch {
+    res.status(500).json({ error: 'Failed to list images' });
+  }
+});
+
+router.delete('/:uuid', verifyToken, (req, res) => {
+  const { uuid } = req.params;
+  // Simple UUID validation (rough)
+  if (!uuid || uuid.includes('..') || uuid.includes('/')) {
+    return res.status(400).json({ error: 'Invalid uuid' });
+  }
+  const avifPath = path.join(UPLOADS_DIR, `${uuid}.avif`);
+  const webpPath = path.join(UPLOADS_DIR, `${uuid}.webp`);
+  const avifExists = fs.existsSync(avifPath);
+  const webpExists = fs.existsSync(webpPath);
+  if (!avifExists && !webpExists) {
+    return res.status(404).json({ error: 'Image not found' });
+  }
+  try {
+    if (avifExists) fs.unlinkSync(avifPath);
+    if (webpExists) fs.unlinkSync(webpPath);
+    res.json({ deleted: true });
+  } catch {
+    res.status(500).json({ error: 'Failed to delete image' });
+  }
 });
 
 router.post('/', (req, res, next) => {

@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { renderMarkdown } from '../lib/markdown';
+import ImageGalleryModal from './ImageGalleryModal';
 
 interface EditableCellProps {
   value: string;
@@ -22,17 +23,51 @@ async function uploadImage(blob: Blob): Promise<string> {
   return data.url;
 }
 
-function insertTextAtCursor(_el: HTMLElement, text: string) {
+/**
+ * Save the current selection range so we can restore it later after async ops.
+ * Returns null if the selection is not inside the given container.
+ */
+function saveRange(container: HTMLElement): Range | null {
   const sel = window.getSelection();
-  if (!sel || !sel.rangeCount) return;
+  if (!sel || !sel.rangeCount) return null;
   const range = sel.getRangeAt(0);
-  range.deleteContents();
+  if (!container.contains(range.commonAncestorContainer)) return null;
+  return range.cloneRange();
+}
+
+/**
+ * Restore a saved range; if restoration fails (container lost focus, etc)
+ * and fallbackContainer is provided, append text at the end instead.
+ */
+function restoreAndInsertText(container: HTMLElement, savedRange: Range | null, text: string) {
+  const sel = window.getSelection();
+  if (savedRange && container.contains(savedRange.commonAncestorContainer)) {
+    // Create a fresh range from the saved one to avoid issues
+    const range = document.createRange();
+    try {
+      range.setStart(savedRange.startContainer, savedRange.startOffset);
+      range.setEnd(savedRange.endContainer, savedRange.endOffset);
+      range.deleteContents();
+      const textNode = document.createTextNode(text);
+      range.insertNode(textNode);
+      range.setStartAfter(textNode);
+      range.collapse(false);
+      sel?.removeAllRanges();
+      sel?.addRange(range);
+      return;
+    } catch {
+      // fall through to append
+    }
+  }
+  // Append at end of container
   const textNode = document.createTextNode(text);
-  range.insertNode(textNode);
-  range.setStartAfter(textNode);
+  container.appendChild(textNode);
+  // Place cursor after inserted text
+  const range = document.createRange();
+  range.selectNodeContents(container);
   range.collapse(false);
-  sel.removeAllRanges();
-  sel.addRange(range);
+  sel?.removeAllRanges();
+  sel?.addRange(range);
 }
 
 export default function EditableCell({
@@ -43,21 +78,41 @@ export default function EditableCell({
 }: EditableCellProps) {
   const [editing, setEditing] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [galleryOpen, setGalleryOpen] = useState(false);
   const divRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const savedRef = useRef(false);
-  const fileDialogOpenRef = useRef(false);
+  const savedRangeRef = useRef<Range | null>(null);
+
+  const handleImageUrl = useCallback((url: string) => {
+    if (!divRef.current) return;
+    restoreAndInsertText(divRef.current, savedRangeRef.current, `![](${url})`);
+    setGalleryOpen(false);
+    savedRangeRef.current = null;
+    // Keep editing mode active, focus back into the div
+    setTimeout(() => {
+      divRef.current?.focus();
+      // Update saved range to new cursor position
+      const sel = window.getSelection();
+      if (!sel || !sel.rangeCount) return;
+      const r = sel.getRangeAt(0);
+      if (divRef.current && divRef.current.contains(r.commonAncestorContainer)) {
+        savedRangeRef.current = r.cloneRange();
+      }
+    }, 0);
+  }, []);
 
   const handleImageBlob = useCallback(async (blob: Blob) => {
     if (!divRef.current) return;
     setUploading(true);
     try {
       const url = await uploadImage(blob);
-      insertTextAtCursor(divRef.current, `![](${url})`);
+      restoreAndInsertText(divRef.current, savedRangeRef.current, `![](${url})`);
     } catch {
       // silently fail
     } finally {
       setUploading(false);
+      savedRangeRef.current = null;
+      setTimeout(() => divRef.current?.focus(), 0);
     }
   }, []);
 
@@ -74,27 +129,27 @@ export default function EditableCell({
       sel?.removeAllRanges();
       sel?.addRange(range);
     }
-  }, [editing]);
+  }, [editing, value]);
 
   useEffect(() => {
-    const onWindowFocus = () => {
-      if (fileDialogOpenRef.current) {
-        setTimeout(() => {
-          fileDialogOpenRef.current = false;
-          if (divRef.current && document.activeElement !== divRef.current) {
-            divRef.current.focus();
-          }
-        }, 100);
+    if (!editing) return;
+    const onSelectionChange = () => {
+      if (!divRef.current) return;
+      const sel = window.getSelection();
+      if (!sel || !sel.rangeCount) return;
+      const range = sel.getRangeAt(0);
+      if (divRef.current.contains(range.commonAncestorContainer)) {
+        savedRangeRef.current = range.cloneRange();
       }
     };
-    window.addEventListener('focus', onWindowFocus);
-    return () => window.removeEventListener('focus', onWindowFocus);
-  }, []);
+    document.addEventListener('selectionchange', onSelectionChange);
+    return () => document.removeEventListener('selectionchange', onSelectionChange);
+  }, [editing]);
 
   const handleBlur = () => {
     if (savedRef.current) return;
-    if (fileDialogOpenRef.current) {
-      setTimeout(() => divRef.current?.focus(), 0);
+    if (galleryOpen) {
+      // Don't blur when gallery is open; blur will come when gallery closes
       return;
     }
     savedRef.current = true;
@@ -120,6 +175,7 @@ export default function EditableCell({
     for (let i = 0; i < items.length; i++) {
       if (items[i].type.startsWith('image/')) {
         e.preventDefault();
+        savedRangeRef.current = saveRange(divRef.current!);
         handleImageBlob(items[i].getAsFile()!);
         return;
       }
@@ -132,6 +188,7 @@ export default function EditableCell({
     if (!files) return;
     for (let i = 0; i < files.length; i++) {
       if (files[i].type.startsWith('image/')) {
+        savedRangeRef.current = saveRange(divRef.current!);
         handleImageBlob(files[i]);
         return;
       }
@@ -142,10 +199,15 @@ export default function EditableCell({
     e.preventDefault();
   };
 
-  const handleFileChange = () => {
-    fileDialogOpenRef.current = false;
-    const file = fileInputRef.current?.files?.[0];
-    if (file) handleImageBlob(file);
+  const handleGallerySelect = (url: string) => {
+    handleImageUrl(url);
+  };
+
+  const handleAttachClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    savedRangeRef.current = saveRange(divRef.current!);
+    setGalleryOpen(true);
   };
 
   if (editing) {
@@ -162,18 +224,11 @@ export default function EditableCell({
           onDrop={handleDrop}
           onDragOver={handleDragOver}
         />
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={handleFileChange}
-          onClick={(e) => { (e.target as HTMLInputElement).value = ''; }}
-        />
         <button
           className="absolute bottom-1 right-1 w-6 h-6 flex items-center justify-center rounded text-[var(--text-muted)] hover:text-[var(--accent)] hover:bg-[var(--header-bg)] transition-colors"
           title="Attach image"
-          onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); fileDialogOpenRef.current = true; fileInputRef.current?.click(); }}
+          onMouseDown={(e) => { e.preventDefault(); }}
+          onClick={handleAttachClick}
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
@@ -189,6 +244,17 @@ export default function EditableCell({
             </svg>
           </div>
         )}
+
+        <ImageGalleryModal
+          open={galleryOpen}
+          onClose={() => {
+            setGalleryOpen(false);
+            savedRangeRef.current = null;
+            // re-focus cell after closing gallery
+            setTimeout(() => divRef.current?.focus(), 0);
+          }}
+          onSelect={handleGallerySelect}
+        />
       </div>
     );
   }

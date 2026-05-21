@@ -342,6 +342,7 @@ export default function App() {
         open={settingsOpen}
         onClose={() => setSettingsOpen(false)}
         onSetAutoLockTimeout={setAutoLockTimeout}
+        entries={entries}
       />
 
       {lightboxSrc && (
